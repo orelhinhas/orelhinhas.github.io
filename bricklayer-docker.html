@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>orelhas.in</title>
+	<meta name="description" content="">
+	<meta name="author" content="Joao Gabriel">
+
+	<!-- HTML5 shim, for IE6-8 support of HTML elements -->
+	<!--[if lt IE 9]>
+		<script src="/theme/html5.js"></script>
+	<![endif]-->
+
+	<!-- Styles -->
+	<link href="/theme/bootstrap.min.css" rel="stylesheet">
+	<link href="/theme/local.css" rel="stylesheet">
+	<link href="/theme/pygments.css" rel="stylesheet">
+
+	<!-- Feeds -->
+
+
+
+
+</head>
+<body>
+	<div class="topbar">
+	  <div class="topbar-inner">
+		<div class="container-fluid">
+		  <a class="brand" href="/">orelhas.in</a>
+			<ul class="nav">
+					<li class="active"><a href="/category/docker.html">Docker</a></li>
+			</ul>
+			<p class="pull-right"><a href="/archives.html">[archives]</a> <a href="/tags.html">[tags]</a></p>
+		</div>
+	  </div>
+	</div>
+
+	<div class="container-fluid">
+	  <div class="sidebar">
+		<div class="well">
+			<h3>Blogroll</h3>
+			<ul>
+				<li><a href="http://martinez.io/">sysadms must be lazy</a></li>
+				<li><a href="https://news.ycombinator.com/">Hacker News</a></li>
+				<li><a href="http://www.slashdot.org">Slashdot</a></li>
+			</ul>
+			<div class="social">
+			<h3>Social</h3>
+			<ul>
+				<li><a href="https://www.github.com/orelhinhas">Github</a></li>
+				<li><a href="https://pt.linkedin.com/pub/joão-gabriel-lisanti/9/8b/88/">LinkedIn</a></li>
+				<li><a href="https://www.facebook.com/orelhinhass">Facebook</a></li>
+				<li><a href="https://www.twitter.com/orelhinhas">Twitter</a></li>
+			</ul>
+			</div>
+		</div>
+	  </div>
+	  <div class="content">
+	<div class='article'>
+		<div class="page-header"><h1>Debian Package with Bricklayer + Docker</h1></div>
+		<div class="well small">Permalink: <a class="more" href="/bricklayer-docker.html">2014-09-30 00:00:00</a>
+by <a class="url fn" href="/author/joao-gabriel.html">Joao Gabriel </a>
+ in <a href="/category/docker.html">Docker</a>
+tags: <a href="/tag/bricklayer.html">bricklayer</a> <a href="/tag/docker.html">docker</a> <a href="/tag/debian.html">debian</a> <a href="/tag/packages.html">packages</a> </div>
+		<div><p>Exists many ways to do a application's deploy, I particularly like to do with packages because besides being faster it's organized and if you need a rollback you'll only need to install a previous version. However if you've many apps it's impracticable you make a package for each one always when the dev wants to test a new version (With Bricklayer it's possible to make three releases; unstable, testing and stable). It here that the Bricklayer enters, it's watching the application's project in GIT and when you commit a new tag then it automatically build and upload the package to your configured repository, as you'll see below. With this Docker's image you'll have the Bricklayer, FTP and repository and you just need put the line with repo's URL in your /etc/apt/sources.list and start a new project in Bricklayer's UI. <br>
+You can see more about Bricklayer in <a href="http://bricklayer.readthedocs.org">http://bricklayer.readthedocs.org</a><br>
+I'm assuming you already have the Docker installed. Here go, at first you need to download the Bricklayer container's image from Docker Hub or build it from Dockerfile, I recommend you to use the Dockerfile because exists many options that you probably will want to change, as server name, ftp password, dependencies for your apps etc. If you'll use the Docker Hub's image will need execute it with /bin/bash and do all changes and after make a new commit in that image.</p>
+<p>Using a Docker Hub's image:</p>
+<p><code># docker pull orelhinhas/bricklayer</code></p>
+<p>Using a Dockerfile:</p>
+<p><code># git clone https://github.com/orelhinhas/bricklayer_docker.git</code></p>
+<p><code># cd bricklayer_docker &amp;&amp; docker build -t bricklayer .</code></p>
+<p>After the commands above finished you'll have something similar to this:</p>
+<p><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker01.jpg" /></p>
+<p>Create a directory in your host to keep Bricklayer's logs and case you needed debug or see the progress of a specific build:</p>
+<p><code># mkdir /var/log/bricklayer</code></p>
+<p>Now, let's start the container with Bricklayer</p>
+<p><code># docker run -v /var/log/bricklayer:/var/lib/bricklayer/workspace/log -p 40000:80 -P orelhinhas/bricklayer</code></p>
+<p>A brief description for above command:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>run</strong></td>
+<td><em>I believe that it's self explanatory :P</em></td>
+</tr>
+<tr>
+<td><strong>-v /var/log/brikclayer:/var/lib/bricklayer/workspace/log</strong></td>
+<td><em>ith this option docker will bypass UFS and you can access the Bricklayers's logs in container from your host</em></td>
+</tr>
+<tr>
+<td><strong>-p 40000:80</strong></td>
+<td><em>assign port 40000 from host to port 80 from container, this way you keep the same port in your repo's URL in sources.list, if you don't follow this every time that you start the Bricklayer's container a new randomic port will be assign and you'll need change every sources.list</em></td>
+</tr>
+<tr>
+<td><strong>-P</strong></td>
+<td><em>Publish all ports that's exposed, in our case Redis and FTP. (Maybe you want to access redis-cli or log in FTP)</em></td>
+</tr>
+<tr>
+<td><strong>orelhinhas/bricklayer</strong></td>
+<td><em>path/name of image</em></td>
+</tr>
+</tbody>
+</table>
+<p>Ok, we have the output below:</p>
+<p><a href="images/bricklayer_docker02.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker02.jpg" /></a></p>
+<p>check the status of the container:</p>
+<p><code># docker ps</code></p>
+<p><a href="images/bricklayer_docker03.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker03.jpg" /></a></p>
+<p>Done, now we can add a new project and build our first package with the Bricklayer :D</p>
+<p>Access with the URL that you configured in SERVER_NAME at port 40000, in this case will be: <em>http://bricklayer.snowwhite:40000</em> and you'll see something like this:</p>
+<p><a href="images/bricklayer_docker04.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker04.jpg" /></a></p>
+<p>For now only the first two tabs matter, At first "Projects" is where the build will be and the second tab "Groups" is where you configured the repositories that the packages will be uploaded.</p>
+<p><a href="images/bricklayer_docker05.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker05.jpg" /></a></p>
+<p>In this Docker image we already have a repository and FTP  configured but if you want to use other just add a new one.
+Well, let's go to our first package, I'll not explain how how debianize your app, have a dozens of articles and how to's in the internet talking about it. :)
+Go to the first tab "Projects" and look at button called "Create project", when you click it a window like below will appear:</p>
+<p><a href="images/bricklayer_docker06.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker06.jpg" /></a></p>
+<p><strong>Name</strong>: put the package name</p>
+<p><strong>Git URL</strong>: address of your GIT project (if you have a private repo will be need create a ssh key and put the address in this format: git@github.com:...)</p>
+<p><strong>Branch</strong>: Branch that you want to build your app package</p>
+<p><strong>Version</strong>: you can put any numeric thing, because when you push a tag this version will be replaced for the right tag (in general I put 1.0.0)</p>
+<p><strong>Build Command and Install command</strong>: it's not necessary by now.</p>
+<p><strong>Group name</strong>: Here you define for which repository you want to upload the package (if you have more than one repo).</p>
+<p>In our example we're packaging the Arachnid (https://www.github.com/Clubjudge/arachnid), an app made in NodeJS to index webcrawler.</p>
+<p><a href="images/bricklayer_docker07.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker07.jpg" /></a></p>
+<p>After "Save changes" if you can see some informations about the build in /var/log/bricklayer/bricklayer.log.</p>
+<p><a href="images/bricklayer_docker08.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker08.jpg" /></a></p>
+<p>In our example, it does two builds, one for stable release and other for testing release (Bricklayer get the last tag if exists then automatically does the build). Now, refresh your browser and you'll notice that exists two labels at right side, a green for stable release and orange for testing release.</p>
+<p><a href="images/bricklayer_docker09.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker09.jpg" /></a></p>
+<p>Click in the name of project and you can see some informations:</p>
+<p><a href="images/bricklayer_docker010.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker010.jpg" /></a></p>
+<p>On the top you have information about which repo this package was uploaded (if you have more than one), last commit and which branch this build was made. At bottom you have when the build was made, version and release, number of build and the most important: build log. If you don't want open a terminal to check the build or better, you don't want to give access in the box to developers, they can follow the build in realtime through this window.</p>
+<p><a href="images/bricklayer_docker011.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker011.jpg" /></a></p>
+<p>Well, now let's suppose that you need for any reason build a new package with the unstable release and create a new stable package for production.
+At first let's build the unstable package, go to the directory project and type:</p>
+<p><code># git tag unstable_0.0.1</code></p>
+<p>by the way, the version doesn't need to be necessarily 0.0.1, could be any one that you want.</p>
+<p>Now, push the tag to git</p>
+<p><code># git push --tags</code></p>
+<p>Well done, refresh your browser and see that exist a new red label :D</p>
+<p><a href="images/bricklayer_docker012.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker012.jpg" /></a></p>
+<p>To build new versions just commit a new tag but it's very important pay attention that the version <strong>MUST BE incremental</strong> because if you push a tag with a previous version that the last build, the Bricklayer will not work.</p>
+<p>Ok, we're almost done. We've one package per release and it already in the repository, configure your <em>/etc/apt/sources.list</em> in this way:</p>
+<p>deb http://HOST_SERVER_NAME:PORT_CONTAINER/packages/ RELEASE main</p>
+<p>in our case:</p>
+<p># stable repository</p>
+<p>deb http://snowwhite:40000/packages/ stable main</p>
+<p># testing repository</p>
+<p>deb http://snowwhite:40000/packages/ testing main</p>
+<p># unstable repository</p>
+<p>deb http://snowwhite:40000/packages/ unstable main</p>
+<p>Just make sure that this package doesn't exist in my current configured debian repository in this server:</p>
+<p><a href="images/bricklayer_docker013.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker013.jpg" /></a></p>
+<p>Add our new repo (notice the last line):</p>
+<p><a href="images/bricklayer_docker014.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker014.jpg" /></a></p>
+<p>and see the result of <code>apt-get update</code>:</p>
+<p><a href="images/bricklayer_docker015.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker015.jpg" /></a></p>
+<p>and now:</p>
+<p><a href="images/bricklayer_docker016.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker016.jpg" /></a></p>
+<p>Is there :D, now you just install it :D</p>
+<p>Obs:</p>
+<p>This docker image is already able to build Ruby apps, but for this it's necessary you know some details. Is installed two Ruby versions (1.9.3-p547 and ruby-2.1.2) via RVM (yes, it's bad but needed). To the Bricklayer build your app with the right version of Ruby you need to put a .rvmrc.example file in app root with the follow content for example:</p>
+<p>rvm 2.1.2@myapp </p>
+<p>and RVM need to be with SYSTEM in "current &amp; default" like below:</p>
+<p><a href="images/bricklayer_docker017.jpg"><img alt="alt text" src="images/thumb/thumbnail_tall/bricklayer_docker017.jpg" /></a></p>
+<p>If you have any doubt or difficult or review please let me know :)</p>
+<p>Joao Gabriel <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#106;&#103;&#108;&#105;&#115;&#97;&#110;&#116;&#105;&#64;&#103;&#109;&#97;&#105;&#108;&#46;&#99;&#111;&#109;">&#106;&#103;&#108;&#105;&#115;&#97;&#110;&#116;&#105;&#64;&#103;&#109;&#97;&#105;&#108;&#46;&#99;&#111;&#109;</a></p></div>
+	</div>
+		<footer>
+		  <p>Powered by <a href="http://getpelican.com/">Pelican</a>. Theme based on <a href="http://twitter.github.com/bootstrap/">Twitter Bootstrap</a>.</p>
+		  <p>&copy; Joao Gabriel</p>
+		</footer>
+	  </div>
+
+	</div>
+</body>
+</html>
